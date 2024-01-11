@@ -2,7 +2,10 @@ import React from "react";
 
 
 const ScratchBlock: React.FC = () => {
-  return -1
+    return (
+        <div className="relative w-32 h-16 bg-white">
+        </div>
+    )
 }
 
 
