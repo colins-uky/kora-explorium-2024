@@ -13,7 +13,7 @@ const red = "bg-[#f00]";
 const blue = "bg-[#00f]";
 const green = "bg-[#0f0]";
 
-export default function Home() {
+export default function Admin() {
 
 
     const [count, setCount] = useState(0);
