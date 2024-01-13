@@ -23,11 +23,10 @@ export default function Admin() {
 
     return (
         <div className='h-screen w-screen bg-bluegrass'>
-            <TopBar />
-            <div className='flex justify-center items-center mt-10' >
+            <TopBar title='Admin'/>
                 
-                <Joy />
-            </div>
+            <Joy />
+            
             
         </div>
     )

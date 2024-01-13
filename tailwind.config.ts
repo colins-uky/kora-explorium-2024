@@ -10,6 +10,7 @@ const config: Config = {
     fontFamily : {
       Lato: ['Lato', 'sans-serif'],
       Bruno: ["'Bruno Ace SC'", 'cursive'],
+      mono: ['Courier New', 'Courier', 'monospace'],
     },
 
     colors: {

@@ -3,16 +3,21 @@ import JoyTable from './joy_table';
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import InputGroup from 'react-bootstrap/InputGroup';
-
 import WebSocketClient from './websocket';
-import { webcrypto } from 'crypto';
+import { Joystick } from 'react-joystick-component';
+
+const uk_image = "@/../public/UK_logo.svg";
 
 const HALT = "M0000000000000000";
 
 const joyStickDriftTolerance = 0.20;
 
+const BERT_URL = "ws://localhost:8765";
+const DEMOBOT_URL = "ws://localhost:8765";
 
+const targetFPS = 13;
 
+const NO_BUTTONS = [0, 0, 0, 0]
 
 function getFirstNonNullItem(array: any) {
     for (let i = 0; i < array.length; i++) {
@@ -24,7 +29,7 @@ function getFirstNonNullItem(array: any) {
 }
 
 
-function calculateMotorSpeeds(forwardBackward: number, leftRight: number, buttons: number[]) {
+function calculateMotorSpeeds(forwardBackward: number, leftRight: number, buttons: number[], deadSwitch: boolean) {
     const differential = leftRight * forwardBackward;
 
     let leftSpeedStr = "";
@@ -97,8 +102,11 @@ function calculateMotorSpeeds(forwardBackward: number, leftRight: number, button
 
     }
 
+    // If deadswitch not being pressed, send HALT
+    if (!deadSwitch) {
+        message = HALT;
+    }
 
-    
     //console.log(message);
     
     return message;
@@ -114,47 +122,137 @@ const Joy: React.FC = () => {
     const [gamepadType, setGamepadType] = useState("joy");
 
     const [prevMessage, setPrevMessage] = useState(HALT);
+    const [isDeadSwitch, setIsDeadSwitch] = useState(false);
 
 
-
+    // var for debugging purposes, only gets updated when a message is sent over websocket.
+    const [latestOutgoingMessage, setLatestOutgoingMessage] = useState(HALT);
 
 
     // Joystick control panel
+    const [joystick, setJoystick] = useState<any>(null);
+    const [showJoystick, setShowJoystick] = useState(false);
+
     // Hide debug menu button logic
     const [isDebug, setIsDebug] = useState(false);
+    
     // Websocket connection input
-    const [isConnecting, setIsConnecting] = useState(false)
-    const [isConnected, setIsConnected] = useState(false)
-    const [webSocketAddress, setWebSocketAddress] = useState<string | null>(null)
+    const [isConnected, setIsConnected] = useState(false);
+    const [webSocketAddress, setWebSocketAddress] = useState<string | null>(null);
+
+    // Quick Websocket connection for Bert and DemoBot
+    const [isBertConnected, setIsBertConnected] = useState(false);
+    const [isDemoBotConnected, setIsDemoBotConnected] = useState(false);
 
     // Initialize blank webSocketClient instance
     // Use useState to persist websocket across page updates
-    const [websocket, setWebsocket] = useState<WebSocketClient | null>(new WebSocketClient());
+    const [isConnectionError, setIsConnectionError] = useState(false);
+    const [websocket, setWebsocket] = useState<WebSocketClient>(new WebSocketClient(setIsConnectionError));
 
-
-
+    
+    
 
     // Button Handlers
+    const handleShowJoyStick = () => {
+        
+        if (gamepad) {
+            alert("Diconnect gamepad before using touch joystick.");
+            return;
+        }
+        
+        setShowJoystick(prev => !prev);
+    }
+
+
     const handleButtonPress = () => {
         setIsDebug(prev => !prev);
     }
 
     const handleWebSocketConnect = () => {
         if (webSocketAddress) {
-            websocket?.connect(webSocketAddress);
-            setIsConnected(true);
+            if (websocket.isConnected) {
+                handleWebSocketDisconnect();
+            }
+
+
+            websocket.connect(webSocketAddress);
+            setIsConnected(websocket.isConnected);
+            window.addEventListener('keydown', handleKeyPress);
         }
     };
 
-    const handleWebSocketDisconnect = () => {
-        if (websocket) {
-            websocket.disconnect();
-            setIsConnected(false);
+    const handleWebSocketDisconnect = useCallback(() => {
+        websocket.disconnect();
+        setIsConnected(false);  
+        setIsBertConnected(false);
+        setIsDemoBotConnected(false);
+      }, [websocket]);
+
+
+    const handleKeyPress = (event: any) => {
+        if (!isConnected) {
+            return;
         }
-        
+
+        const key = event.key.toLowerCase();
+        switch (key) {
+            case 'arrowup':
+            case 'w':
+                console.log('Up arrow or W pressed!');
+                break;
+            case 'arrowdown':
+            case 's':
+                console.log('Down arrow or S pressed!');
+                break;
+            case 'arrowleft':
+            case 'a':
+                console.log('Left arrow or A pressed!');
+                break;
+            case 'arrowright':
+            case 'd':
+                console.log('Right arrow or D pressed!');
+                break;
+            default:
+            // Else
+            break;
+        }
     };
+
+
+    const handleQuickConnect = (bot: string) => {
+        if (websocket.isConnected) {
+            handleWebSocketDisconnect();
+        }
+
+
+        if (bot == "Bert") {
+            // Disconnect any existing connection
+            // Connect to Bert
+            
+
+            websocket?.connect(BERT_URL);
+            setIsBertConnected(true);
+        }
+        else if (bot == "DemoBot") {
+            // Connect to DemoBot
+            
+
+            websocket?.connect(DEMOBOT_URL);
+            setIsDemoBotConnected(true)
+        }
+    }
+    
+    // Joystick handlers
+    const handleJoyStickMove = (event: any) => {
+        setJoystick(event);
+    }
+
+
+
+
 
     // End Button Handlers
+
 
 
     const gamepadHandler = useCallback((event: GamepadEvent, connected: boolean) => {
@@ -180,9 +278,57 @@ const Joy: React.FC = () => {
     }, []);
 
 
-    
+
+
+
+    /////////////////// useEFFECT HOOKS //////////////////////
+
+
+    // Hook that executes when joystick is moved
+    useEffect(() => {
+        if (!joystick) {
+            return;
+        }
+
+
+        const y = -1 * joystick.y;
+        const x = joystick.x;
+
+        const message = calculateMotorSpeeds(y, x, NO_BUTTONS, true);
+
+        if (message != prevMessage) {
+            setPrevMessage(message);
+        }
+        
+    }, [joystick, prevMessage]);
+
+
+
+    // Exception handling hook for websocket errors and UI
+    useEffect(() => {
+        if (isConnectionError) {
+            setIsBertConnected(false);
+            setIsConnected(false);
+            setIsDemoBotConnected(false);
+            setIsConnectionError(prev => !prev);
+        }
+    }, [isConnectionError])
+
+    // Main UseEffect Hook for sending motor speeds over websocket
+    // Whenever prevMessage is updated this will execute
+    useEffect(() => {
+        if (!websocket.isConnected) {
+            return;
+        }
+       
+        websocket.send(prevMessage);
+        setLatestOutgoingMessage(prevMessage);
     
 
+    }, [prevMessage, websocket, isDeadSwitch])
+
+
+    // useEffect Hook for interpreting input from gamepad controllers
     useEffect(() => {
         if (gamepad) {
 
@@ -193,8 +339,19 @@ const Joy: React.FC = () => {
 
                 const buttons = [gamepad.buttons[2].value, gamepad.buttons[3].value, 0, 0]
 
-                const message = calculateMotorSpeeds(y, x, buttons);
-                setPrevMessage(message);
+                const deadman = gamepad.buttons[0].pressed || gamepad.buttons[1].pressed;
+                
+                setIsDeadSwitch(deadman);
+
+                const message = calculateMotorSpeeds(y, x, buttons, deadman);
+
+                if (message != prevMessage) {
+                    // Only if message is different from prev as to not 
+                    // DOS attack our own websocket server
+                    setPrevMessage(message);
+                }
+                
+
             }
             else if (gamepadType == "ps4") {
                 const y = parseFloat(gamepad.axes[3].toFixed(3));
@@ -211,8 +368,16 @@ const Joy: React.FC = () => {
                     gamepad.buttons[13].value
                 ];
 
-                const message = calculateMotorSpeeds(y, x, buttons);
-                setPrevMessage(message);
+                const deadman = gamepad.buttons[7].pressed;
+                setIsDeadSwitch(deadman);
+
+                const message = calculateMotorSpeeds(y, x, buttons, deadman);
+
+                if (message != prevMessage) {
+                    // Only if message is different from prev as to not 
+                    // DOS attack our own websocket server
+                    setPrevMessage(message);
+                }
             }
 
             
@@ -222,11 +387,17 @@ const Joy: React.FC = () => {
 
         }
         
-    }, [gamepad, gamepadType])
+    }, [gamepad, gamepadType, prevMessage])
 
+    // Handle gamepad connections and disconnections.
     useEffect(() => {
         const handleGamepadConnected = (e: GamepadEvent) => {
             gamepadHandler(e, true);
+            setShowJoystick(false);
+            // Weird behavior with joystick and game controller being connected at same time.
+            if (websocket.isConnected) {
+                handleWebSocketDisconnect();
+            }
         };
 
         const handleGamepadDisconnected = (e: GamepadEvent) => {
@@ -240,39 +411,92 @@ const Joy: React.FC = () => {
             window.removeEventListener("gamepadconnected", handleGamepadConnected);
             window.removeEventListener("gamepaddisconnected", handleGamepadDisconnected);
         };
-    }, [gamepadHandler]);
+    }, [gamepadHandler, handleWebSocketDisconnect, websocket]);
 
+
+
+    // Main looping useEffect Hook.
+    // Loops on animation frame throttled targetFPS var.
     useEffect(() => {
-        const updateGamepadState = () => {
-            // Loop through connected gamepads and log button presses and joystick movements
+        let lastUpdateTime = 0;
+      
+        const updateGamepadState = (currentTime: number) => {
+            const deltaTime = currentTime - lastUpdateTime;
+      
+            // Check if enough time has passed to meet the target FPS
+            if (deltaTime > 1000 / targetFPS) {
+            // Your gamepad update logic here
+      
             const gamepads = navigator.getGamepads();
-
-            const gamepad = getFirstNonNullItem(gamepads)
-            
+            const gamepad = getFirstNonNullItem(gamepads);
             setGamepad(gamepad);
-
-            
-    
+      
+            lastUpdateTime = currentTime;
+      
             // Request the next animation frame
             requestAnimationFrame(updateGamepadState);
+        } else {
+            // If not enough time has passed, wait until the next frame
+            setTimeout(() => {
+                requestAnimationFrame(updateGamepadState);
+            }, 1000 / targetFPS - deltaTime);
+          }
         };
-    
+      
         // Start the animation loop
         const animationFrameId = requestAnimationFrame(updateGamepadState);
-    
+      
         // Clean up the animation loop on component unmount
         return () => {
             cancelAnimationFrame(animationFrameId);
         };
     }, []);
 
+
+    ////////////////// END useEFFECT HOOKS //////////////////////
+
     return (
         <>
+        <div className={`flex justify-center items-center border-2 border-black mt-[20vh] lg:absolute lg:left-1/2 lg:bottom-32 ${showJoystick ? "" : "invisible"}`} >
+            <Joystick 
+                
+                size={150} 
+                sticky={false}
+                baseColor="white" 
+                stickColor="blue" 
+                move={(event) => handleJoyStickMove(event)} 
+                stop={() => websocket.isConnected ? websocket.send(HALT) : null}
+                throttle={150}
+                >
+                
+            </Joystick>
+        </div>
+
+
+
         <div className='absolute bottom-6 left-4 flex flex-col' >
+            <Button variant="danger" className='m-2 h-32 w-52' onClick={() => {websocket.isConnected ? websocket.send(HALT) : null}}>
+                E-STOP
+            </Button>
+
+            <div className='m-2 w-52 flex flex-row'>
+                <Button className={`w-24 ${isBertConnected ? "connected" : "disconnected"}`}
+                        onClick={isBertConnected ? handleWebSocketDisconnect : () => handleQuickConnect("Bert")}
+                >
+                    Bert
+                </Button>
+                <Button className={`ml-4 w-24 ${isDemoBotConnected ? "connected" : "disconnected"}`}
+                        onClick={isDemoBotConnected ? handleWebSocketDisconnect : () => handleQuickConnect("DemoBot")}
+                >
+                    DemoBot
+                </Button>
+            </div>
+
+
 
             <InputGroup className="m-2 max-w-72">
                 <Form.Control
-                placeholder="socket"
+                placeholder="ws://localhost:1234"
                 aria-label="Websocket address"
                 aria-describedby="basic-addon2"
                 onChange={(e) => setWebSocketAddress(e.target.value)}
@@ -291,6 +515,9 @@ const Joy: React.FC = () => {
             </InputGroup>
 
 
+            
+
+
             <Button variant="warning" className='m-2 w-52' onClick={handleButtonPress}>
                 { isDebug ? 
                     "Hide Controller Debug"
@@ -298,14 +525,28 @@ const Joy: React.FC = () => {
                     "Show Controller Debug"
                 }
             </Button>
+            
 
+            <Button variant="secondary" className='m-2 w-52' onClick={handleShowJoyStick}>
+                { showJoystick ? 
+                    "Hide Joystick"
+                    :
+                    "Show Joystick"
+                }
+            </Button>
             
             
         </div>
 
         { isDebug ? 
             <div className='flex flex-col min-w-80 w-3/4'>
-                <JoyTable axes={gamepad?.axes} buttons={gamepad?.buttons} />
+                <JoyTable 
+                    axes={gamepad?.axes} 
+                    buttons={gamepad?.buttons} 
+                    last_message={latestOutgoingMessage}
+                    dead_man_switch={isDeadSwitch}
+                    gamepadType={gamepadType}
+                />
             </div>
             :
             null

@@ -13,7 +13,7 @@ const red = "bg-[#f00]";
 const blue = "bg-[#00f]";
 const green = "bg-[#0f0]";
 
-export default function Home() {
+export default function Admin() {
 
 
     const [count, setCount] = useState(0);
@@ -25,6 +25,7 @@ export default function Home() {
         <div className='h-screen w-screen bg-bluegrass'>
             <TopBar title='Explorium'/>
             <div className='flex justify-center items-center mt-10' >
+                
                 
             </div>
             
