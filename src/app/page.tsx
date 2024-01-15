@@ -6,19 +6,11 @@ import React, { useState } from 'react'
 import Joy from '@/components/joy';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 
-import 'bootstrap/dist/css/bootstrap.min.css';
 
 
-const red = "bg-[#f00]";
-const blue = "bg-[#00f]";
-const green = "bg-[#0f0]";
+
 
 export default function Home() {
-
-
-    const [count, setCount] = useState(0);
-    const [message, setMessage] = useState("Forward");
-
 
 
     return (

@@ -457,10 +457,10 @@ const Joy: React.FC = () => {
 
     return (
         <>
-        <div className={`flex justify-center items-center border-2 border-black mt-[20vh] lg:absolute lg:left-1/2 lg:bottom-32 ${showJoystick ? "" : "invisible"}`} >
+        <div className={`flex justify-center items-center mt-[10vh] lg:absolute lg:left-1/2 lg:bottom-32 ${showJoystick ? "" : "invisible"}`} >
             <Joystick 
                 
-                size={150} 
+                size={175} 
                 sticky={false}
                 baseColor="white" 
                 stickColor="blue" 
@@ -475,6 +475,7 @@ const Joy: React.FC = () => {
 
 
         <div className='absolute bottom-6 left-4 flex flex-col' >
+            
             <Button variant="danger" className='m-2 h-32 w-52' onClick={() => {websocket.isConnected ? websocket.send(HALT) : null}}>
                 E-STOP
             </Button>
@@ -535,7 +536,7 @@ const Joy: React.FC = () => {
                 }
             </Button>
             
-            
+            <p className='my-0 ml-2'>Last message to websocket: {latestOutgoingMessage}</p>
         </div>
 
         { isDebug ? 

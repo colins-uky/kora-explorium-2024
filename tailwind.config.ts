@@ -36,7 +36,8 @@ const config: Config = {
       'lukblue' : '#1e8aff',
       'midnight' : '#0d3166',
       'sky' : '#9bc6ea',
-      'bluegrass' : '#1e8aff'
+      'bluegrass' : '#1e8aff',
+      'beige': '#faf3dd',
 
     },
     extend: {
