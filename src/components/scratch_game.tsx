@@ -5,35 +5,8 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import { TouchBackend } from "react-dnd-touch-backend";
 import Button from "react-bootstrap/Button";
 
+import BlockContainer from "./scratch_block_container";
 
-
-
-
-
-
-interface BlockContainerProps {
-    blocks: any;
-    setBlocks: any;
-}
-
-const BlockContainer: React.FC<BlockContainerProps> = ({ blocks, setBlocks }) => {
-
-
-    const moveBlock = (fromIndex: number, toIndex: number) => {
-        const updatedBlocks = [...blocks];
-        const [movedBlock] = updatedBlocks.splice(fromIndex, 1);
-        updatedBlocks.splice(toIndex, 0, movedBlock);
-        setBlocks(updatedBlocks);
-    };
-
-    return (
-        <div>
-          {blocks.map((block: Block, index: number) => (
-            <ScratchBlock key={block.id} id={block.id} type={block.type} index={index} moveBlock={moveBlock} />
-        ))}
-        </div>
-    );
-}
 
 
 interface Block {
@@ -85,7 +58,7 @@ const ScratchGame: React.FC = () => {
         <DndProvider backend={isTouchDevice() ? TouchBackend : HTML5Backend}>
             <div className="w-full h-full flex flex-col items-center">
 
-                <div className="w-11/12 max-w-[1000px] h-2/3 mt-10 border-8 border-white">
+                <div className="relative w-11/12 max-w-[1000px] h-2/3 mt-10 p-3 border-4 border-ukblue rounded-xl bg-white shadow-lg">
                     <BlockContainer blocks={blocks} setBlocks={setBlocks} />
                 </div>
 
@@ -116,9 +89,14 @@ const ScratchGame: React.FC = () => {
                             Add Right Turn Block
                         </Button>
 
-                        <Button style={{ backgroundColor: '#faf3dd' }} className="border-2 border-black text-black" onClick={() => handleAddBlock("Wait")}>
-                            Add Wait Block
+                        <Button style={{ backgroundColor: '#00cecb' }} className="border-2 border-black text-black" onClick={() => handleAddBlock("For")}>
+                            Add For Loop
                         </Button>
+                        
+                        <Button style={{ backgroundColor: '#efaac4' }} className="border-2 border-black text-black" onClick={() => handleAddBlock("While")}>
+                            Add While Loop
+                        </Button>
+
                     </div>
 
                     

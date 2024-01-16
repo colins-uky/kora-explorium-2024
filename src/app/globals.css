@@ -44,3 +44,7 @@ body {
 .container-center {
   @apply flex items-center justify-center;
 }
+
+.trashcan.drag-over {
+  filter: invert(42%) sepia(61%) saturate(2879%) hue-rotate(195deg) brightness(102%) contrast(101%);
+}
