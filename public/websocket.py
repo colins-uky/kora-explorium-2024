@@ -1,20 +1,33 @@
+#!/usr/bin/python3
+
 import asyncio
 import websockets
+import serial
 
-async def echo_server(websocket, path):
+ser = serial.Serial('/dev/ttyACM0', 115200, timeout=0)
+
+async def on_connect(websocket, path):
     print(f"Client connected: {websocket.remote_address}")
 
+async def on_disconnect(websocket, close_status, close_msg):
+    print(f"Client disconnected: {websocket.remote_address}")
+
+async def echo(websocket, path):
+    print(f"Client connected: {websocket.remote_address}")
     try:
         async for message in websocket:
-            print(f"Received message from {websocket.remote_address}: {message}")
-            await websocket.send(f"Server received: {message}")
-    except websockets.exceptions.ConnectionClosedError:
-        pass
+            ser.write(bytes(message, 'utf-8'))
+            print(message)
+            await websocket.send(message)
     finally:
         print(f"Client disconnected: {websocket.remote_address}")
 
-start_server = websockets.serve(echo_server, "localhost", 8765)
+async def main():
+    server = await websockets.serve(
+        echo, "192.168.1.16", 1234,
+        process_request=on_connect,  # Called when a client connects
+        process_response=on_disconnect  # Called when a client disconnects
+    )
+    await server.wait_closed()
 
-asyncio.get_event_loop().run_until_complete(start_server)
-print("WebSocket server started on ws://localhost:8765")
-asyncio.get_event_loop().run_forever()
+asyncio.run(main())

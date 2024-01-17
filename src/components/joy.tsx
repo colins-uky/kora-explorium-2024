@@ -10,7 +10,7 @@ const uk_image = "@/../public/UK_logo.svg";
 
 const HALT = "M0000000000000000\n";
 
-const joyStickDriftTolerance = 0.20;
+const joyDeadZone = 0.20;
 
 const BERT_URL = "ws://192.168.1.16:1235";
 const DEMOBOT_URL = "ws://192.168.1.4:1235";
@@ -18,6 +18,12 @@ const DEMOBOT_URL = "ws://192.168.1.4:1235";
 const targetFPS = 13;
 
 const NO_BUTTONS = [0, 0, 0, 0]
+
+
+// Function to detect if the device is a mobile platform
+function isMobile() {
+    return typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
 
 function getFirstNonNullItem(array: any) {
     for (let i = 0; i < array.length; i++) {
@@ -30,6 +36,19 @@ function getFirstNonNullItem(array: any) {
 
 
 function calculateMotorSpeeds(forwardBackward: number, leftRight: number, buttons: number[], deadSwitch: boolean) {
+    // Joystick deadzone
+
+    
+    if (Math.abs(forwardBackward) < joyDeadZone){
+        forwardBackward = 0;
+    }
+    
+    if (Math.abs(leftRight) < joyDeadZone) {
+        leftRight = 0;
+    }
+
+    
+    
     const differential = leftRight * forwardBackward;
 
     let leftSpeedStr = "";
@@ -40,14 +59,14 @@ function calculateMotorSpeeds(forwardBackward: number, leftRight: number, button
 
     
     // Add directional bit to speed strings. 
-    if (motorSpeedLeft < 0) {
+    if (motorSpeedLeft < 0.01) {
         leftSpeedStr += "0";
     }
     else {
         leftSpeedStr += "1";
     }
 
-    if (motorSpeedRight < 0) {
+    if (motorSpeedRight < 0.01) {
         rightSpeedStr += "0";
     }
     else {
@@ -57,13 +76,7 @@ function calculateMotorSpeeds(forwardBackward: number, leftRight: number, button
     motorSpeedLeft = Math.abs(motorSpeedLeft);
     motorSpeedRight = Math.abs(motorSpeedRight);
 
-    if (motorSpeedLeft < joyStickDriftTolerance){
-        motorSpeedLeft = 0;
-    }
     
-    if (motorSpeedRight < joyStickDriftTolerance) {
-        motorSpeedRight = 0;
-    }
 
 
     if (motorSpeedLeft > 1) {
@@ -153,6 +166,11 @@ const Joy: React.FC = () => {
     
 
     // Button Handlers
+    
+
+
+
+
     const handleShowJoyStick = () => {
         
         if (gamepad) {
@@ -177,7 +195,7 @@ const Joy: React.FC = () => {
 
             websocket.connect(webSocketAddress);
             setIsConnected(websocket.isConnected);
-            window.addEventListener('keydown', handleKeyPress);
+           
         }
     };
 
@@ -186,38 +204,24 @@ const Joy: React.FC = () => {
         setIsConnected(false);  
         setIsBertConnected(false);
         setIsDemoBotConnected(false);
-      }, [websocket]);
+    }, [websocket]);
 
-
-    const handleKeyPress = (event: any) => {
-        if (!isConnected) {
-            return;
+   
+    const handleEmergencyStop = () => {
+        const interval = 100 // milliseconds
+        const numMessages = 30;
+        if (websocket.isConnected) {
+            let executionsCount = 0;
+            const intervalId = setInterval(() => {
+                websocket.send(HALT);
+                executionsCount++;
+                
+                if (executionsCount === numMessages) {
+                    clearInterval(intervalId); // Stop the interval when done
+                }
+            }, interval); 
         }
-
-        const key = event.key.toLowerCase();
-        switch (key) {
-            case 'arrowup':
-            case 'w':
-                console.log('Up arrow or W pressed!');
-                break;
-            case 'arrowdown':
-            case 's':
-                console.log('Down arrow or S pressed!');
-                break;
-            case 'arrowleft':
-            case 'a':
-                console.log('Left arrow or A pressed!');
-                break;
-            case 'arrowright':
-            case 'd':
-                console.log('Right arrow or D pressed!');
-                break;
-            default:
-            // Else
-            break;
-        }
-    };
-
+    } 
 
     const handleQuickConnect = (bot: string) => {
         if (websocket.isConnected) {
@@ -295,8 +299,11 @@ const Joy: React.FC = () => {
         const x = joystick.x;
 
         const message = calculateMotorSpeeds(y, x, NO_BUTTONS, true);
+        
+        console.log(message);
+        console.log(prevMessage);
 
-        if (message != prevMessage) {
+        if (message !== prevMessage) {
             setPrevMessage(message);
         }
         
@@ -325,7 +332,7 @@ const Joy: React.FC = () => {
         setLatestOutgoingMessage(prevMessage);
     
 
-    }, [prevMessage, websocket, isDeadSwitch])
+    }, [prevMessage, websocket])
 
 
     // useEffect Hook for interpreting input from gamepad controllers
@@ -476,7 +483,7 @@ const Joy: React.FC = () => {
 
         <div className='absolute bottom-6 left-4 flex flex-col' >
             
-            <Button variant="danger" className='m-2 h-32 w-52' onClick={() => {websocket.isConnected ? websocket.send(HALT) : null}}>
+            <Button variant="danger" className='m-2 h-32 w-52' onClick={handleEmergencyStop}>
                 E-STOP
             </Button>
 
@@ -527,14 +534,18 @@ const Joy: React.FC = () => {
                 }
             </Button>
             
-
-            <Button variant="secondary" className='m-2 w-52' onClick={handleShowJoyStick}>
-                { showJoystick ? 
-                    "Hide Joystick"
-                    :
-                    "Show Joystick"
-                }
-            </Button>
+            { isMobile() ? 
+                <Button variant="secondary" className='m-2 w-52' onClick={handleShowJoyStick}>
+                    { showJoystick ? 
+                        "Hide Joystick"
+                        :
+                        "Show Joystick"
+                    }
+                </Button>
+                :
+                <></>
+            }
+            
             
             <p className='my-0 ml-2'>Last message to websocket: {latestOutgoingMessage}</p>
         </div>

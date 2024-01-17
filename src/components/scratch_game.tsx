@@ -22,10 +22,7 @@ const ScratchGame: React.FC = () => {
         return typeof window !== 'undefined' && 'ontouchstart' in window;
     }
 
-    // Function to detect if the device is a mobile platform
-    function isMobile() {
-        return typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    }
+    
 
     // Initialize state vars
     const [blocks, setBlocks] = useState<Block[]>([]);
