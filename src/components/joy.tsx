@@ -8,12 +8,12 @@ import { Joystick } from 'react-joystick-component';
 
 const uk_image = "@/../public/UK_logo.svg";
 
-const HALT = "M0000000000000000";
+const HALT = "M0000000000000000\n";
 
 const joyStickDriftTolerance = 0.20;
 
-const BERT_URL = "ws://localhost:8765";
-const DEMOBOT_URL = "ws://localhost:8765";
+const BERT_URL = "ws://192.168.1.16:1235";
+const DEMOBOT_URL = "ws://192.168.1.4:1235";
 
 const targetFPS = 13;
 
@@ -82,23 +82,23 @@ function calculateMotorSpeeds(forwardBackward: number, leftRight: number, button
     leftSpeedStr += normalizedLeftMotorSpeed.toString().padStart(3, '0');
     rightSpeedStr += normalizedRightMotorSpeed.toString().padStart(3, '0');
 
-    let message = "M" + leftSpeedStr + rightSpeedStr + leftSpeedStr + rightSpeedStr;
+    let message = "M" + leftSpeedStr + rightSpeedStr + leftSpeedStr + rightSpeedStr + '\n';
 
     if (buttons[0] == 1) {
         // Left Turn
-        message = "M1150015011500150";
+        message = "M1150015011500150\n";
     }
     else if (buttons[1] == 1) {
         // Right Turn
-        message = "M0150115001501150";
+        message = "M0150115001501150\n";
     }
     else if (buttons[2] == 1) {
         // Forward
-        message = "M1150115011501150";
+        message = "M1150115011501150\n";
     }
     else if (buttons[3] == 1) {
         // Backward
-        message = "M0150015001500150";
+        message = "M0150015001500150\n";
 
     }
 
