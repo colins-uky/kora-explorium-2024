@@ -5,7 +5,7 @@ import React, { useState } from 'react'
 
 import ScratchGame from '@/components/scratch_game';
 
-export default function Admin() {
+export default function Bert() {
 
 
 

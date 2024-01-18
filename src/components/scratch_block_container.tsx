@@ -3,16 +3,23 @@ import ScratchBlock from "./scratchblock";
 import { FaTrash } from "react-icons/fa";
 import { useDrop } from "react-dnd";
 
-interface BlockContainerProps {
-    blocks: any;
-    setBlocks: any;
-}
 
+
+interface LoopDetails {
+    num_loops: number;
+    // Could track a counter variable maybe
+};
 
 interface Block {
     id: number;
     type: string;
+    loop_details: LoopDetails;
 
+}
+
+interface BlockContainerProps {
+    blocks: any;
+    setBlocks: any;
 }
 
 
@@ -81,7 +88,13 @@ const BlockContainer: React.FC<BlockContainerProps> = ({ blocks, setBlocks }) =>
         <>
         <div>
           {blocks.map((block: Block, index: number) => (
-            <ScratchBlock key={block.id} id={block.id} type={block.type} index={index} moveBlock={moveBlock} />
+            <ScratchBlock 
+                key={block.id} 
+                type={block.type} 
+                index={index} 
+                moveBlock={moveBlock} 
+                loop_details={block.loop_details}
+            />
         ))}
         </div>
             <TrashCan handleDelete={handleResetBlocks} onDropTrashCan={(item: Block) => handleDeleteBlock(item)}/>
