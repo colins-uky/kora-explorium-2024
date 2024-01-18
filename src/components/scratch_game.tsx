@@ -85,7 +85,6 @@ const ScratchGame: React.FC = () => {
             const newBlock2: Block = {
                 id: blockId + 1,
                 type: "End for",
-                loop_details: loop_det,
             };
 
             setBlocks((prevBlocks) => [...prevBlocks, newBlock1, newBlock2]);

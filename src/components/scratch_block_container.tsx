@@ -94,6 +94,7 @@ const BlockContainer: React.FC<BlockContainerProps> = ({ blocks, setBlocks }) =>
                 index={index} 
                 moveBlock={moveBlock} 
                 loop_details={block.loop_details}
+                setBlocks={setBlocks}
             />
         ))}
         </div>
