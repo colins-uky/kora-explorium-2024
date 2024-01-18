@@ -24,6 +24,13 @@ interface Block {
 // Takes in array of blocks.
 // Returns array of strings representing raw opcodes
 // (i.e. the same opcodes without loops).
+// Forward
+// Reverse
+// Left
+// Right
+// Wait
+// For
+// End for
 const compileScratchBlocks = (block_arr: Block[]) => {
     const stack = [];
 

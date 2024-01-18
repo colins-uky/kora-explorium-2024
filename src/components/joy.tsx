@@ -6,6 +6,7 @@ import InputGroup from 'react-bootstrap/InputGroup';
 import WebSocketClient from './websocket';
 import { Joystick } from 'react-joystick-component';
 
+
 const uk_image = "@/../public/UK_logo.svg";
 
 const HALT = "M0000000000000000\n";
@@ -18,6 +19,13 @@ const DEMOBOT_URL = "ws://192.168.1.4:1235";
 const targetFPS = 13;
 
 const NO_BUTTONS = [0, 0, 0, 0]
+
+/* DemoBot:
+        (2)--(1)
+         |    |
+         |    |
+        (3)--(4)
+*/
 
 
 // Function to detect if the device is a mobile platform
@@ -35,95 +43,7 @@ function getFirstNonNullItem(array: any) {
 }
 
 
-function calculateMotorSpeeds(forwardBackward: number, leftRight: number, buttons: number[], deadSwitch: boolean) {
-    // Joystick deadzone
 
-    
-    if (Math.abs(forwardBackward) < joyDeadZone){
-        forwardBackward = 0;
-    }
-    
-    if (Math.abs(leftRight) < joyDeadZone) {
-        leftRight = 0;
-    }
-
-    
-    
-    const differential = leftRight * forwardBackward;
-
-    let leftSpeedStr = "";
-    let rightSpeedStr = "";
-
-    let motorSpeedLeft = -1 * (forwardBackward + differential);
-    let motorSpeedRight = -1 * (forwardBackward - differential);
-
-    
-    // Add directional bit to speed strings. 
-    if (motorSpeedLeft < 0.01) {
-        leftSpeedStr += "0";
-    }
-    else {
-        leftSpeedStr += "1";
-    }
-
-    if (motorSpeedRight < 0.01) {
-        rightSpeedStr += "0";
-    }
-    else {
-        rightSpeedStr += "1";
-    }
-
-    motorSpeedLeft = Math.abs(motorSpeedLeft);
-    motorSpeedRight = Math.abs(motorSpeedRight);
-
-    
-
-
-    if (motorSpeedLeft > 1) {
-        motorSpeedLeft = 1;
-    }
-    if (motorSpeedRight > 1) {
-        motorSpeedRight = 1;
-    }
-
-    const normalizedLeftMotorSpeed = Math.round(motorSpeedLeft * 255);
-    const normalizedRightMotorSpeed = Math.round(motorSpeedRight * 255);
-
-
-    // Add normalized speeds to respective speed strings.
-
-    leftSpeedStr += normalizedLeftMotorSpeed.toString().padStart(3, '0');
-    rightSpeedStr += normalizedRightMotorSpeed.toString().padStart(3, '0');
-
-    let message = "M" + leftSpeedStr + rightSpeedStr + leftSpeedStr + rightSpeedStr + '\n';
-
-    if (buttons[0] == 1) {
-        // Left Turn
-        message = "M1150015011500150\n";
-    }
-    else if (buttons[1] == 1) {
-        // Right Turn
-        message = "M0150115001501150\n";
-    }
-    else if (buttons[2] == 1) {
-        // Forward
-        message = "M1150115011501150\n";
-    }
-    else if (buttons[3] == 1) {
-        // Backward
-        message = "M0150015001500150\n";
-
-    }
-
-    // If deadswitch not being pressed, send HALT
-    if (!deadSwitch) {
-        message = HALT;
-    }
-
-    //console.log(message);
-    
-    return message;
-}
 
 
 
@@ -164,13 +84,119 @@ const Joy: React.FC = () => {
 
     
     
+    const calculateMotorSpeeds = (forwardBackward: number, leftRight: number, buttons: number[], deadSwitch: boolean) => {
+        // Joystick deadzone
+    
+        
+        if (Math.abs(forwardBackward) < joyDeadZone){
+            forwardBackward = 0;
+        }
+        
+        if (Math.abs(leftRight) < joyDeadZone) {
+            leftRight = 0;
+        }
+    
+        
+        
+        const differential = leftRight * forwardBackward;
+    
+        let leftSpeedStr = "";
+        let rightSpeedStr = "";
+    
+        let motorSpeedLeft = -1 * (forwardBackward + differential);
+        let motorSpeedRight = -1 * (forwardBackward - differential);
+    
+        
+        // Add directional bit to speed strings. 
+        if (motorSpeedLeft < 0.01) {
+            leftSpeedStr += "0";
+        }
+        else {
+            leftSpeedStr += "1";
+        }
+    
+        if (motorSpeedRight < 0.01) {
+            rightSpeedStr += "0";
+        }
+        else {
+            rightSpeedStr += "1";
+        }
+    
+        motorSpeedLeft = Math.abs(motorSpeedLeft);
+        motorSpeedRight = Math.abs(motorSpeedRight);
+    
+        
+    
+    
+        if (motorSpeedLeft > 1) {
+            motorSpeedLeft = 1;
+        }
+        if (motorSpeedRight > 1) {
+            motorSpeedRight = 1;
+        }
+    
+        const normalizedLeftMotorSpeed = Math.round(motorSpeedLeft * 255);
+        const normalizedRightMotorSpeed = Math.round(motorSpeedRight * 255);
+    
+    
+        // Add normalized speeds to respective speed strings.
+    
+        leftSpeedStr += normalizedLeftMotorSpeed.toString().padStart(3, '0');
+        rightSpeedStr += normalizedRightMotorSpeed.toString().padStart(3, '0');
+
+        let motor1 = leftSpeedStr;
+        let motor2 = rightSpeedStr;
+        let motor3 = leftSpeedStr;
+        let motor4 = rightSpeedStr;
+    
+        if (isDemoBotConnected) {
+            motor1 = rightSpeedStr;
+            motor2 = leftSpeedStr;
+            motor3 = leftSpeedStr;
+            motor4 = rightSpeedStr;
+
+            let motor3_char_arr = motor3.split('');
+            motor3_char_arr[0] = motor3_char_arr[0] === '0' ? '1' : '0';
+            motor3 = motor3_char_arr.join('');
+
+            let motor4_char_arr = motor4.split('');
+            motor4_char_arr[0] = motor4_char_arr[0] === '0' ? '1' : '0';
+            motor4 = motor4_char_arr.join('');
+        }
+        
+    
+        let message = "M" + motor1 + motor2 + motor3 + motor4 + '\n';
+    
+        if (buttons[0] == 1) {
+            // Left Turn
+            message = "M1150015011500150\n";
+        }
+        else if (buttons[1] == 1) {
+            // Right Turn
+            message = "M0150115001501150\n";
+        }
+        else if (buttons[2] == 1) {
+            // Forward
+            message = "M1150115011501150\n";
+        }
+        else if (buttons[3] == 1) {
+            // Backward
+            message = "M0150015001500150\n";
+    
+        }
+    
+        // If deadswitch not being pressed, send HALT
+        if (!deadSwitch) {
+            message = HALT;
+        }
+    
+        //console.log(message);
+        
+        return message;
+    }
 
     // Button Handlers
     
-
-
-
-
     const handleShowJoyStick = () => {
         
         if (gamepad) {
