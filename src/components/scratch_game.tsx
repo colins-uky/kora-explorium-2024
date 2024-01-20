@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import ScratchBlock from "./scratchblock";
-import { DndProvider, useDrag, useDrop, DropTargetMonitor } from "react-dnd";
+import { DndProvider} from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { TouchBackend } from "react-dnd-touch-backend";
 import Button from "react-bootstrap/Button";
 
 import BlockContainer from "./scratch_block_container";
+import WebSocketClient from './websocket';
+
 
 interface LoopDetails {
     num_loops: number | null;
@@ -32,27 +33,63 @@ interface Block {
 // For
 // End for
 const compileScratchBlocks = (block_arr: Block[]) => {
-    const stack = [];
+    const opcodes: string[] = []
+    let for_count = 0;
+    let end_for_count = 0;
 
-    // Extract the instructions from the Block objects
-    const opcodes = block_arr.map((block) => block.type);
+    let start = 0;
+    let end = 0;
 
-    console.log(opcodes);
-    for (let i = 0; i < opcodes.length; i++) {
-        switch (opcodes[i]) {
-            case "bruh":
+    let nloops = 1;
 
-                break;
-
+    for (let i = 0; i < block_arr.length; i++) {
+        const block = block_arr[i];
+        
+        if (block.type === "For") {
+            if (for_count == 0) {
+                // first for loop
+                start = i;
+                nloops = block.loop_details?.num_loops || 1;
+            }
+            for_count++;
         }
+        else if (block.type === "End for") {
+            end_for_count++;
+            if (for_count === end_for_count) {
+                // closing end for block
+                end = i;
+
+                for_count = 0;
+                end_for_count = 0;    
+                // Recurse
+                const for_loop = block_arr.slice(start + 1, end);
+                opcodes.push(...compileScratchBlocks(concatenateArray(for_loop, nloops)));
+            }
+        }
+        else if (for_count == 0) {
+            opcodes.push(block.type);
+        }
+        
     }
-
-
-
-
-
+    
+    //console.log(opcodes);
     return opcodes;
+    
 }
+
+// Duplicates array and concatenates with itself n times
+// Helper function for compiler function
+const concatenateArray = (array: Block[], n: number) => {
+
+    // Use Array.from to create a new array with repeated elements
+    const concatenatedArray = Array.from({ length: n }, () => [...array]).flat();
+
+    return concatenatedArray;
+}
+
+
+
+
 
 
 
@@ -68,7 +105,24 @@ const ScratchGame: React.FC = () => {
     // Initialize state vars
     const [blocks, setBlocks] = useState<Block[]>([]);
     
+    const [wsError, setWSError] = useState<boolean>(false);
+    const [websocket, setWebsocket] = useState<WebSocketClient>(new WebSocketClient(setWSError));
+
     
+    const [isExecuting, setIsExecuting] = useState<boolean>(false);
+
+
+
+    // Takes in an array of opcodes and sends the corresponding motor messages to the bot.
+    const sendCommandsToWebsocket = (opcodes: string[]) => {
+        
+    }
+
+
+
+
+
+
     // Button handlers
 
     const handleAddBlock = (type: string) => {
@@ -112,64 +166,67 @@ const ScratchGame: React.FC = () => {
 
 
     const handleExecuteProgram = () => {
-        const motor_messages = compileScratchBlocks(blocks);
-        console.log(motor_messages);
+        const opcodes = compileScratchBlocks(blocks);
+        console.log(opcodes);
+        setIsExecuting(true);
+        sendCommandsToWebsocket(opcodes);
     }
 
-
+    /*
     useEffect(() => {
         console.log(blocks);
     }, [blocks])
-
+    */
 
     return (
         <DndProvider backend={isTouchDevice() ? TouchBackend : HTML5Backend}>
             <div className="w-full h-full flex flex-col items-center">
 
-                <div className="relative w-11/12 max-w-[1000px] h-2/3 mt-10 p-3 border-4 border-ukblue rounded-xl bg-white shadow-lg">
+                <div className="overflow-scroll relative w-11/12 max-w-[1000px] h-2/3 mt-10 p-3 border-4 border-ukblue rounded-xl bg-white shadow-lg">
                     <BlockContainer blocks={blocks} setBlocks={setBlocks} />
                 </div>
 
 
 
-                <div className="btn-menu w-11/12 max-w-[1000px] mt-10 border-4 border-white flex flex-col p-2">
+                <div className="btn-menu w-11/12 max-w-[1000px] mt-8 mb-4 border-0 border-white flex flex-col p-2">
 
                     <div className="btn-row flex flex-row justify-between items-center">
-                        <Button style={{ backgroundColor: '#faf3dd' }} className="border-2 border-black text-black" onClick={() => handleAddBlock("Wait")}>
-                            Add Wait Block
+                        <Button style={{ backgroundColor: '#efaac4' }} className="border-2 border-black text-black w-24 m-0" onClick={() => handleAddBlock("For")}>
+                            For Loop
                         </Button>
                         
-                        <Button style={{ backgroundColor: '#deca23' }} className="border-2 border-black text-black" onClick={() => handleAddBlock("Forward")}>
-                            Add Forward Block
+                        <Button style={{ backgroundColor: '#deca23' }} className="border-2 border-black text-black w-24" onClick={() => handleAddBlock("Forward")}>
+                            Forward
                         </Button>
 
-                        <Button style={{ backgroundColor: '#6cbf4d' }} className="border-2 border-black text-black" onClick={() => handleAddBlock("Reverse")}>
-                            Add Reverse Block
-                        </Button>
+                        <div className="w-24"></div>
                     </div>
 
                     <div className="btn-row flex flex-row justify-between items-center mt-4">
-                        <Button style={{ backgroundColor: '#00a4e6' }} className="border-2 border-black text-black" onClick={() => handleAddBlock("Left")}>
-                            Add Left Turn Block
+                        <Button style={{ backgroundColor: '#deca23' }} className="border-2 border-black text-black w-24" onClick={() => handleAddBlock("Left")}>
+                            Left
                         </Button>
 
-                        <Button style={{ backgroundColor: '#ee5c5c' }} className="border-2 border-black text-black" onClick={() => handleAddBlock("Right")}>
-                            Add Right Turn Block
+                        <Button style={{ backgroundColor: '#00a4e6' }} className="border-2 border-black text-black w-24" onClick={() => handleAddBlock("Wait")}>
+                            Wait
                         </Button>
 
-                        <Button style={{ backgroundColor: '#efaac4' }} className="border-2 border-black text-black" onClick={() => handleAddBlock("For")}>
-                            Add For Loop
+                        <Button style={{ backgroundColor: '#deca23' }} className="border-2 border-black text-black w-24" onClick={() => handleAddBlock("Right")}>
+                            Right
                         </Button>
-                        
 
                     </div>
 
                     <div className="btn-row flex flex-row-reverse justify-between items-center mt-4">
-                        <Button variant="secondary" className="border-2 border-black text-black" onClick={handleExecuteProgram}>
+                        <Button style={{ backgroundColor: '#6cbf4d' }} className="border-2 border-black text-black w-24" onClick={handleExecuteProgram}>
                             Run
                         </Button>
 
-                        
+                        <Button style={{ backgroundColor: '#deca23' }} className="border-2 border-black text-black w-24" onClick={() => handleAddBlock("Reverse")}>
+                            Reverse
+                        </Button>
+
+                        <div className="w-24"></div>
 
                     </div>
                     

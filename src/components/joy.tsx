@@ -20,12 +20,7 @@ const targetFPS = 13;
 
 const NO_BUTTONS = [0, 0, 0, 0]
 
-/* DemoBot:
-        (2)--(1)
-         |    |
-         |    |
-        (3)--(4)
-*/
+
 
 
 // Function to detect if the device is a mobile platform
@@ -84,7 +79,7 @@ const Joy: React.FC = () => {
 
     
     
-    const calculateMotorSpeeds = (forwardBackward: number, leftRight: number, buttons: number[], deadSwitch: boolean) => {
+    const calculateMotorSpeeds = useCallback((forwardBackward: number, leftRight: number, buttons: number[], deadSwitch: boolean) => {
         // Joystick deadzone
     
         
@@ -148,6 +143,10 @@ const Joy: React.FC = () => {
         let motor2 = rightSpeedStr;
         let motor3 = leftSpeedStr;
         let motor4 = rightSpeedStr;
+
+        
+
+        
     
         if (isDemoBotConnected) {
             motor1 = rightSpeedStr;
@@ -162,28 +161,86 @@ const Joy: React.FC = () => {
             let motor4_char_arr = motor4.split('');
             motor4_char_arr[0] = motor4_char_arr[0] === '0' ? '1' : '0';
             motor4 = motor4_char_arr.join('');
-        }
         
-    
+            /* DemoBot:
+               (2)--(1)
+                |    |
+                |    |
+               (3)--(4) 
+                Motors 3 and 4 have direction bit flipped also.
+            */
+            if (buttons[0] == 1) {
+                // Left Turn
+                motor1 = "1200";
+                motor2 = "0200";
+                motor3 = "1200";
+                motor4 = "0200";
+
+
+            }
+            else if (buttons[1] == 1) {
+                // Right Turn
+                motor1 = "0200";
+                motor2 = "1200";
+                motor3 = "0200";
+                motor4 = "1200";
+            }
+            else if (buttons[2] == 1) {
+                // Forward
+                motor1 = "1200";
+                motor2 = "1200";
+                motor3 = "0200";
+                motor4 = "0200";
+            }
+            else if (buttons[3] == 1) {
+                // Backward
+                motor1 = "0200";
+                motor2 = "0200";
+                motor3 = "1200";
+                motor4 = "1200";
+            }
+        }
+        else {
+            /* Bert: (And every other bot in the future hopefully.)
+               (1)--(2)
+                |    |
+                |    |
+               (3)--(4)
+            */
+            if (buttons[0] == 1) {
+                // Left Turn
+                motor1 = "0200";
+                motor2 = "1200";
+                motor3 = "0200";
+                motor4 = "1200";
+
+
+            }
+            else if (buttons[1] == 1) {
+                // Right Turn
+                motor1 = "1200";
+                motor2 = "0200";
+                motor3 = "1200";
+                motor4 = "0200";
+            }
+            else if (buttons[2] == 1) {
+                // Forward
+                motor1 = "1200";
+                motor2 = "1200";
+                motor3 = "1200";
+                motor4 = "1200";
+            }
+            else if (buttons[3] == 1) {
+                // Backward
+                motor1 = "0200";
+                motor2 = "0200";
+                motor3 = "0200";
+                motor4 = "0200";
+            }
+        }
+
+
         let message = "M" + motor1 + motor2 + motor3 + motor4 + '\n';
-    
-        if (buttons[0] == 1) {
-            // Left Turn
-            message = "M1150015011500150\n";
-        }
-        else if (buttons[1] == 1) {
-            // Right Turn
-            message = "M0150115001501150\n";
-        }
-        else if (buttons[2] == 1) {
-            // Forward
-            message = "M1150115011501150\n";
-        }
-        else if (buttons[3] == 1) {
-            // Backward
-            message = "M0150015001500150\n";
-    
-        }
     
         // If deadswitch not being pressed, send HALT
         if (!deadSwitch) {
@@ -192,8 +249,9 @@ const Joy: React.FC = () => {
     
         //console.log(message);
         
+        
         return message;
-    }
+    }, [isDemoBotConnected]);
 
     // Button Handlers
     
@@ -333,7 +391,7 @@ const Joy: React.FC = () => {
             setPrevMessage(message);
         }
         
-    }, [joystick, prevMessage]);
+    }, [joystick, prevMessage, calculateMotorSpeeds]);
 
 
 
@@ -420,7 +478,7 @@ const Joy: React.FC = () => {
 
         }
         
-    }, [gamepad, gamepadType, prevMessage])
+    }, [gamepad, gamepadType, prevMessage, calculateMotorSpeeds])
 
     // Handle gamepad connections and disconnections.
     useEffect(() => {

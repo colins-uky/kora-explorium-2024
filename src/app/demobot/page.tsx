@@ -10,7 +10,7 @@ export default function DemoBot() {
 
 
     return (
-        <div className='flex flex-col h-[100vh] bg-bluegrass'>
+        <div className='flex flex-col min-h-screen bg-bluegrass'>
             <TopBar title={"Explorium"} />
             
 

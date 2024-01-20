@@ -10,7 +10,7 @@ export default function Bert() {
 
 
     return (
-        <div className='flex flex-col h-[100vh] bg-bluegrass'>
+        <div className='flex min-h-screen flex-col bg-bluegrass'>
             <TopBar title={"Explorium"} />
             
 

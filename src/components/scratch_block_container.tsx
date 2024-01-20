@@ -45,7 +45,7 @@ const TrashCan: React.FC<TrashCanProps> = ({ onDropTrashCan, handleDelete }) => 
     return (
         <div
             ref={drop}
-            className={`trashcan cursor-pointer absolute right-4 bottom-4 ${isDragOver ? 'drag-over' : ''}`}
+            className={`trashcan absolute right-0 cursor-pointer ${isDragOver ? 'drag-over' : ''}`}
             onMouseEnter={() => setDragOver(true)}
             onMouseLeave={() => setDragOver(false)}
             onClick={handleDelete}
@@ -67,9 +67,8 @@ const BlockContainer: React.FC<BlockContainerProps> = ({ blocks, setBlocks }) =>
         setBlocks(updatedBlocks);
     };
 
-    const handleDeleteBlock = (deletedItem: Block) => {
+    const handleDeleteBlock = (deletedItem: any) => {
         setBlocks((prevBlocks: Block[]) => prevBlocks.filter(block => block.id !== deletedItem.id));
-
     };
 
     const handleResetBlocks = () => {
@@ -85,21 +84,22 @@ const BlockContainer: React.FC<BlockContainerProps> = ({ blocks, setBlocks }) =>
     }
 
     return (
-        <>
-        <div>
-          {blocks.map((block: Block, index: number) => (
-            <ScratchBlock 
-                key={block.id} 
-                type={block.type} 
-                index={index} 
-                moveBlock={moveBlock} 
-                loop_details={block.loop_details}
-                setBlocks={setBlocks}
-            />
-        ))}
-        </div>
+        <div className="flex flex-col h-full">
+            <div> 
+            {blocks.map((block: Block, index: number) => (
+                <ScratchBlock 
+                    key={index} 
+                    type={block.type} 
+                    index={index} 
+                    id={block.id}
+                    moveBlock={moveBlock} 
+                    loop_details={block.loop_details}
+                    setBlocks={setBlocks}
+                />
+            ))}
             <TrashCan handleDelete={handleResetBlocks} onDropTrashCan={(item: Block) => handleDeleteBlock(item)}/>
-        </>
+            </div>
+        </div>
     );
 }
 
