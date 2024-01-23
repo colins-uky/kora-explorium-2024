@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { DndProvider} from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { TouchBackend } from "react-dnd-touch-backend";
 import Button from "react-bootstrap/Button";
 
 import BlockContainer from "./scratch_block_container";
-import WebSocketClient from './websocket';
 
 
 interface LoopDetails {
@@ -87,26 +86,148 @@ const concatenateArray = (array: Block[], n: number) => {
     return concatenatedArray;
 }
 
+// Compiler helper function that takes in "bert" or "demobot", (defualts to bert),
+// and a raw op-code, (See above compileScratchBlocks function for examples (except for))
+// and converts it into a motor message string like: "M0000000000000000"
+const convertToMotorMessage = (op: string, speed:number, isDemoBot: boolean = false) => {
+    let motor1 = "";
+    let motor2 = "";
+    let motor3 = "";
+    let motor4 = "";
+
+    let motor_message = "";
+    
+    if (!isDemoBot) {
+        // NOT DemoBot
+        /* Bert: (And every other bot in the future hopefully.)
+               (1)--(2)
+                |    |
+                |    |
+               (3)--(4)
+        */
+        switch(op) {
+            case "Forward":
+                motor1 = `1${speed}`;
+                motor2 = `1${speed}`;
+                motor3 = `1${speed}`;
+                motor4 = `1${speed}`;
+                break;
+            case "Reverse":
+                motor1 = `0${speed}`;
+                motor2 = `0${speed}`;
+                motor3 = `0${speed}`;
+                motor4 = `0${speed}`;
+                break;
+            case "Left":
+                motor1 = `0${speed}`;
+                motor2 = `1${speed}`;
+                motor3 = `0${speed}`;
+                motor4 = `1${speed}`;
+                break;
+            case "Right":
+                motor1 = `1${speed}`;
+                motor2 = `0${speed}`;
+                motor3 = `1${speed}`;
+                motor4 = `0${speed}`;
+                break;
+            case "Wait":
+                motor1 = "0000";
+                motor2 = "0000";
+                motor3 = "0000";
+                motor4 = "0000";
+                break;
+            default:
+                motor1 = "0000";
+                motor2 = "0000";
+                motor3 = "0000";
+                motor4 = "0000";
+                break;
+        }
+
+        
+    }
+    else {
+        // DemoBot
+        /* DemoBot:
+               (2)--(1)
+                |    |
+                |    |
+               (3)--(4) 
+            Motors 3 and 4 have direction bit flipped also.
+        */
+        switch(op) {
+            case "Forward":
+                motor1 = `1${speed}`;
+                motor2 = `1${speed}`;
+                motor3 = `0${speed}`;
+                motor4 = `0${speed}`;
+                break;
+            case "Reverse":
+                motor1 = `0${speed}`;
+                motor2 = `0${speed}`;
+                motor3 = `1${speed}`;
+                motor4 = `1${speed}`;
+                break;
+            case "Left":
+                motor1 = `1${speed}`;
+                motor2 = `0${speed}`;
+                motor3 = `1${speed}`;
+                motor4 = `0${speed}`;
+                break;
+            case "Right":
+                motor1 = `0${speed}`;
+                motor2 = `1${speed}`;
+                motor3 = `0${speed}`;
+                motor4 = `1${speed}`;
+                break;
+            case "Wait":
+                motor1 = "0000";
+                motor2 = "0000";
+                motor3 = "0000";
+                motor4 = "0000";
+                break;
+            default:
+                motor1 = "0000";
+                motor2 = "0000";
+                motor3 = "0000";
+                motor4 = "0000";
+                break;
+        }
+    }
+    // End if (!isDemoBot)
+
+
+    // Compile motors into one message and return
+    return `M${motor1}${motor2}${motor3}${motor4}\n`;
+
+}
+
+
+interface ScratchGameProps {
+    isDemoBot?: boolean;
+    websocket_address: string;
+}
+
+
+const HALT = "M0000000000000000\n";
 
 
 
-
-
-
-const ScratchGame: React.FC = () => {
+const ScratchGame: React.FC<ScratchGameProps> = ({ isDemoBot, websocket_address }) => {
 
     // Function to detect touch support
     function isTouchDevice() {
         return typeof window !== 'undefined' && 'ontouchstart' in window;
     }
 
+    isDemoBot = isDemoBot || false;
     
 
     // Initialize state vars
     const [blocks, setBlocks] = useState<Block[]>([]);
     
-    const [wsError, setWSError] = useState<boolean>(false);
-    const [websocket, setWebsocket] = useState<WebSocketClient>(new WebSocketClient(setWSError));
+    
+    //const [websocket, setWebsocket] = useState<WebSocket | null>(null)
 
     
     const [isExecuting, setIsExecuting] = useState<boolean>(false);
@@ -114,9 +235,84 @@ const ScratchGame: React.FC = () => {
 
 
     // Takes in an array of opcodes and sends the corresponding motor messages to the bot.
-    const sendCommandsToWebsocket = (opcodes: string[]) => {
+    const sendCommandsToWebsocket = useCallback(
+        async (opcodes: string[], timeoutMilliseconds: number) => {
         
-    }
+            //const websocket = new WebSocket(websocket_address);
+            
+            const connectPromise = new Promise<WebSocket>((resolve, reject) => {
+                try {
+                    const websocket = new WebSocket(websocket_address);
+                
+                    // Resolve the promise if connected successfully
+                    websocket.onopen = () => {
+                        resolve(websocket);
+                    };
+                
+                    // Reject the promise if there is an error during connection
+                    websocket.onerror = (error) => {
+                        reject(error);
+                    };
+                } catch (error) {
+                    // Reject the promise if there is an exception during connection
+                    reject(error);
+                }
+            });
+
+            
+
+            let websocket: WebSocket | undefined;
+
+            connectPromise.then(
+                (result) => { 
+                   websocket = result;
+                },
+                (error) => { 
+                   console.error(error);
+                   setIsExecuting(false);
+                   return;
+                }
+            );
+            
+           
+
+            for (let i = 0; i < opcodes.length; i++) {
+                
+                
+                
+                // Duration of the HALT messages.
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+
+                if (websocket?.readyState != 1) {
+                    console.log(websocket);
+                    setIsExecuting(false);
+                    return;
+                }
+
+                // Convert raw instruction into a meaningful message for the bot's motors
+                const motor_message = convertToMotorMessage(opcodes[i], 155, isDemoBot);
+                websocket.send(motor_message);
+
+
+                // Let motor_message run for timeoutMilliseconds
+                // Should be enough for a 90 degree turn 
+                // using one "left" or "right" opcode
+                // Duration of the meaningful motor messages.
+                await new Promise(resolve => setTimeout(resolve, timeoutMilliseconds));
+
+                
+                // Stop motors before awaiting next instruction
+                websocket.send(HALT);
+            
+            }
+
+
+            // set isExecuting to false and close websocket
+            setIsExecuting(false);
+            websocket?.close();
+        }, 
+    [isDemoBot, websocket_address]);
 
 
 
@@ -166,23 +362,27 @@ const ScratchGame: React.FC = () => {
 
 
     const handleExecuteProgram = () => {
-        const opcodes = compileScratchBlocks(blocks);
-        console.log(opcodes);
-        setIsExecuting(true);
-        sendCommandsToWebsocket(opcodes);
+        if (blocks.length > 0) {
+            setIsExecuting(true);
+
+            const opcodes = compileScratchBlocks(blocks);
+            sendCommandsToWebsocket(opcodes, 2000);
+        }
     }
 
-    /*
-    useEffect(() => {
-        console.log(blocks);
-    }, [blocks])
-    */
+
+    const handleStopProgram = () => {
+
+    }
+
+  
+    
 
     return (
         <DndProvider backend={isTouchDevice() ? TouchBackend : HTML5Backend}>
-            <div className="w-full h-full flex flex-col items-center">
+            <div className="w-full flex flex-col items-center">
 
-                <div className="overflow-scroll relative w-11/12 max-w-[1000px] h-2/3 mt-10 p-3 border-4 border-ukblue rounded-xl bg-white shadow-lg">
+                <div className="overflow-scroll relative w-11/12 max-w-[1000px] h-1/2 mt-10 p-3 border-4 border-ukblue rounded-xl bg-white shadow-lg">
                     <BlockContainer blocks={blocks} setBlocks={setBlocks} />
                 </div>
 
@@ -218,8 +418,10 @@ const ScratchGame: React.FC = () => {
                     </div>
 
                     <div className="btn-row flex flex-row-reverse justify-between items-center mt-4">
-                        <Button style={{ backgroundColor: '#6cbf4d' }} className="border-2 border-black text-black w-24" onClick={handleExecuteProgram}>
-                            Run
+                        <Button className={`border-2 border-black text-black w-24 shadow-lg shadow-green ${isExecuting ? "connected" : "disconnected"}`} onClick={isExecuting ? handleStopProgram : handleExecuteProgram}>
+                            {
+                                isExecuting ? "STOP" : "Run"
+                            }
                         </Button>
 
                         <Button style={{ backgroundColor: '#deca23' }} className="border-2 border-black text-black w-24" onClick={() => handleAddBlock("Reverse")}>

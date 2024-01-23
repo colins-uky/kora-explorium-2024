@@ -5,7 +5,11 @@ import React, { useState } from 'react'
 
 import ScratchGame from '@/components/scratch_game';
 
-export default function DemoBot() {
+
+const DEMOBOT_URL = "ws://192.168.1.4:1235";
+
+
+export default function Ernie() {
 
 
 
@@ -14,7 +18,10 @@ export default function DemoBot() {
             <TopBar title={"Explorium"} />
             
 
-            <ScratchGame />
+            <ScratchGame 
+                isDemoBot={true} 
+                websocket_address={DEMOBOT_URL}
+            />
             
         </div>
     )

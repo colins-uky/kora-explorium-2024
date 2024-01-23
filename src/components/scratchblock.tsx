@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { FaCog } from "react-icons/fa";
 import { useDrag, useDrop, DropTargetMonitor } from "react-dnd";
 
@@ -27,6 +27,7 @@ interface Props {
 
 
 const ScratchBlock: React.FC<Props> = ({ type, index, id, moveBlock, setBlocks}) => {
+    const ref = useRef<HTMLDivElement | null>(null);
     let color = "red";
     let isLoop = false;
     const type_copy = type;
@@ -36,6 +37,7 @@ const ScratchBlock: React.FC<Props> = ({ type, index, id, moveBlock, setBlocks})
     switch (type.toLowerCase()) {
         case "wait":
             color = "#00a4e6"; //"" #faf3dd
+            symbol = "1s"
             break;
     
         case "forward":
@@ -92,9 +94,12 @@ const ScratchBlock: React.FC<Props> = ({ type, index, id, moveBlock, setBlocks})
 
 
 
-    const [, ref] = useDrag({
+    const [{ isDragging }, drag] = useDrag({
         type: 'BLOCK',
         item: {index, id},
+        collect: (monitor) => ({
+            isDragging: monitor.isDragging(),
+        }),
     });
 
     const [, drop] = useDrop({
@@ -107,13 +112,15 @@ const ScratchBlock: React.FC<Props> = ({ type, index, id, moveBlock, setBlocks})
         },
     });
     
+    drag(ref);
+    drop(ref);
 
-
+    
 
     if (isLoop) {
         return (
-            <div ref={(node) => ref(drop(node))} className="w-full">
-                <div  className="flex cursor-grab active:cursor-grabbing relative w-40 h-9 rounded-md border-2 border-black" style={{ backgroundColor: color }}>
+            <div ref={ref} className="w-full">
+                <div  className={`flex cursor-grab active:cursor-grabbing relative w-48 h-9 rounded-md border-2 border-black`} style={{ backgroundColor: color }}>
                 
                     <h1 className="text-lg font-bold z-10 absolute top-0.5 left-3 text-black">{type_copy}</h1>
                     {(type === "For") ? 
@@ -137,8 +144,8 @@ const ScratchBlock: React.FC<Props> = ({ type, index, id, moveBlock, setBlocks})
     }
     else {
         return (
-            <div ref={(node) => ref(drop(node))} className="w-full">
-                <div className="flex cursor-grab active:cursor-grabbing relative w-32 h-9 rounded-md border-2 border-black" style={{ backgroundColor: color }}>
+            <div ref={ref} className="w-full">
+                <div className="flex cursor-grab active:cursor-grabbing relative w-40 h-9 rounded-md border-2 border-black" style={{ backgroundColor: color }}>
                     
                     
                     

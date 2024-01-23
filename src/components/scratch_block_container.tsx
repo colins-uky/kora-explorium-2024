@@ -45,13 +45,18 @@ const TrashCan: React.FC<TrashCanProps> = ({ onDropTrashCan, handleDelete }) => 
     return (
         <div
             ref={drop}
-            className={`trashcan absolute right-0 cursor-pointer ${isDragOver ? 'drag-over' : ''}`}
-            onMouseEnter={() => setDragOver(true)}
-            onMouseLeave={() => setDragOver(false)}
-            onClick={handleDelete}
+            className={`trashcan z-10 sticky absolute right-0 bottom-0 flex flex-row-reverse ${isDragOver ? 'drag-over' : ''}`}
+            
         >
+            <div 
+                className="cursor-pointer"
+                onClick={handleDelete}
+                onMouseEnter={() => setDragOver(true)}
+                onMouseLeave={() => setDragOver(false)}
+            >
             {/* Display trashcan icon or any other visual representation */}
             <FaTrash size={50} />
+            </div>
         </div>
     );
 };
@@ -84,8 +89,8 @@ const BlockContainer: React.FC<BlockContainerProps> = ({ blocks, setBlocks }) =>
     }
 
     return (
-        <div className="flex flex-col h-full">
-            <div> 
+        <div className="relative flex flex-col h-[400px] md:h-[600px] w-full justify-between">
+            <div >
             {blocks.map((block: Block, index: number) => (
                 <ScratchBlock 
                     key={index} 
@@ -97,8 +102,8 @@ const BlockContainer: React.FC<BlockContainerProps> = ({ blocks, setBlocks }) =>
                     setBlocks={setBlocks}
                 />
             ))}
-            <TrashCan handleDelete={handleResetBlocks} onDropTrashCan={(item: Block) => handleDeleteBlock(item)}/>
             </div>
+            <TrashCan handleDelete={handleResetBlocks} onDropTrashCan={(item: Block) => handleDeleteBlock(item)}/>
         </div>
     );
 }

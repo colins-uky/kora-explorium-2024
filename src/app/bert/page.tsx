@@ -5,6 +5,11 @@ import React, { useState } from 'react'
 
 import ScratchGame from '@/components/scratch_game';
 
+
+const BERT_URL = "ws://192.168.1.16:1235";
+
+const TEST_URL = "ws://localhost:8765";
+
 export default function Bert() {
 
 
@@ -14,7 +19,9 @@ export default function Bert() {
             <TopBar title={"Explorium"} />
             
 
-            <ScratchGame />
+            <ScratchGame 
+                websocket_address={TEST_URL}
+            />
             
         </div>
     )

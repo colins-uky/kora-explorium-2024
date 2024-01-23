@@ -29,13 +29,11 @@ body {
 
 .disconnected {
   background-color: limegreen !important;
-  border: 0px !important;
   box-shadow: 3px 0px 10px limegreen;
 }
 
 .connected {
   background-color: red !important;
-  border: 0px !important;
 
   box-shadow: 3px 0px 10px rgba(255, 0, 0, 0.774);
 }
@@ -47,4 +45,9 @@ body {
 
 .trashcan.drag-over {
   filter: invert(42%) sepia(61%) saturate(2879%) hue-rotate(195deg) brightness(102%) contrast(101%);
+}
+
+
+.dragging {
+  filter: brightness(80%);
 }
