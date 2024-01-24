@@ -5,10 +5,15 @@ import React, { useState } from 'react'
 
 import ScratchGame from '@/components/scratch_game';
 
-
-const BERT_URL = "ws://192.168.1.16:1235";
-
 const TEST_URL = "ws://localhost:8765";
+
+
+
+const ISDEMOBOT = false;
+const BERT_URL = "ws://192.168.1.16:1235";
+const MOTOR_SPEED = 125;
+const OP_DURATION_MILLISECONDS = 1500;
+
 
 export default function Bert() {
 
@@ -20,7 +25,11 @@ export default function Bert() {
             
 
             <ScratchGame 
-                websocket_address={TEST_URL}
+                isDemoBot={ISDEMOBOT}
+                websocket_address={BERT_URL}
+                motor_speed={MOTOR_SPEED}
+                operation_duration_milliseconds={OP_DURATION_MILLISECONDS}
+
             />
             
         </div>

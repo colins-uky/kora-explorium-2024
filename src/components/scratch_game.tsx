@@ -203,9 +203,13 @@ const convertToMotorMessage = (op: string, speed:number, isDemoBot: boolean = fa
 }
 
 
+
+
 interface ScratchGameProps {
     isDemoBot?: boolean;
     websocket_address: string;
+    motor_speed: number;
+    operation_duration_milliseconds: number;
 }
 
 
@@ -213,7 +217,7 @@ const HALT = "M0000000000000000\n";
 
 
 
-const ScratchGame: React.FC<ScratchGameProps> = ({ isDemoBot, websocket_address }) => {
+const ScratchGame: React.FC<ScratchGameProps> = ({ isDemoBot, websocket_address, motor_speed, operation_duration_milliseconds }) => {
 
     // Function to detect touch support
     function isTouchDevice() {
@@ -236,7 +240,7 @@ const ScratchGame: React.FC<ScratchGameProps> = ({ isDemoBot, websocket_address 
 
     // Takes in an array of opcodes and sends the corresponding motor messages to the bot.
     const sendCommandsToWebsocket = useCallback(
-        async (opcodes: string[], timeoutMilliseconds: number) => {
+        async (opcodes: string[]) => {
         
             //const websocket = new WebSocket(websocket_address);
             
@@ -291,7 +295,7 @@ const ScratchGame: React.FC<ScratchGameProps> = ({ isDemoBot, websocket_address 
                 }
 
                 // Convert raw instruction into a meaningful message for the bot's motors
-                const motor_message = convertToMotorMessage(opcodes[i], 155, isDemoBot);
+                const motor_message = convertToMotorMessage(opcodes[i], motor_speed, isDemoBot);
                 websocket.send(motor_message);
 
 
@@ -299,7 +303,7 @@ const ScratchGame: React.FC<ScratchGameProps> = ({ isDemoBot, websocket_address 
                 // Should be enough for a 90 degree turn 
                 // using one "left" or "right" opcode
                 // Duration of the meaningful motor messages.
-                await new Promise(resolve => setTimeout(resolve, timeoutMilliseconds));
+                await new Promise(resolve => setTimeout(resolve, operation_duration_milliseconds));
 
                 
                 // Stop motors before awaiting next instruction
@@ -366,7 +370,7 @@ const ScratchGame: React.FC<ScratchGameProps> = ({ isDemoBot, websocket_address 
             setIsExecuting(true);
 
             const opcodes = compileScratchBlocks(blocks);
-            sendCommandsToWebsocket(opcodes, 2000);
+            sendCommandsToWebsocket(opcodes);
         }
     }
 
