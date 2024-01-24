@@ -139,10 +139,10 @@ const Joy: React.FC = () => {
         leftSpeedStr += normalizedLeftMotorSpeed.toString().padStart(3, '0');
         rightSpeedStr += normalizedRightMotorSpeed.toString().padStart(3, '0');
 
-        let motor1 = leftSpeedStr;
+        let motor1 = rightSpeedStr;
         let motor2 = rightSpeedStr;
         let motor3 = leftSpeedStr;
-        let motor4 = rightSpeedStr;
+        let motor4 = leftSpeedStr;
 
         
 
@@ -202,10 +202,11 @@ const Joy: React.FC = () => {
         }
         else {
             /* Bert: (And every other bot in the future hopefully.)
-               (1)--(2)
+               (4)--(2)
                 |    |
                 |    |
-               (3)--(4)
+               (3)--(1)
+                lidar is in the front between (2)--(4)
             */
             if (buttons[0] == 1) {
                 // Left Turn

@@ -100,10 +100,11 @@ const convertToMotorMessage = (op: string, speed:number, isDemoBot: boolean = fa
     if (!isDemoBot) {
         // NOT DemoBot
         /* Bert: (And every other bot in the future hopefully.)
-               (1)--(2)
+               (4)--(2)
                 |    |
                 |    |
-               (3)--(4)
+               (3)--(1)
+                lidar is in the front between (2)--(4)
         */
         switch(op) {
             case "Forward":
@@ -119,16 +120,16 @@ const convertToMotorMessage = (op: string, speed:number, isDemoBot: boolean = fa
                 motor4 = `0${speed}`;
                 break;
             case "Left":
-                motor1 = `0${speed}`;
+                motor1 = `1${speed}`;
                 motor2 = `1${speed}`;
                 motor3 = `0${speed}`;
-                motor4 = `1${speed}`;
+                motor4 = `0${speed}`;
                 break;
             case "Right":
-                motor1 = `1${speed}`;
+                motor1 = `0${speed}`;
                 motor2 = `0${speed}`;
                 motor3 = `1${speed}`;
-                motor4 = `0${speed}`;
+                motor4 = `1${speed}`;
                 break;
             case "Wait":
                 motor1 = "0000";
