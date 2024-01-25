@@ -10,8 +10,8 @@ import ScratchGame from '@/components/scratch_game';
 
 const ISDEMOBOT = true;
 const DEMOBOT_URL = "ws://192.168.1.4:1235";
-const MOTOR_SPEED = 125;
-const OP_DURATION_MILLISECONDS = 1500;
+const MOTOR_SPEED = 100;
+const OP_DURATION_MILLISECONDS = 452;
 
 export default function Ernie() {
 
