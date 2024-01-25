@@ -11,8 +11,8 @@ const TEST_URL = "ws://localhost:8765";
 
 const ISDEMOBOT = false;
 const BERT_URL = "ws://192.168.1.16:1235";
-const MOTOR_SPEED = 125;
-const OP_DURATION_MILLISECONDS = 1500;
+const MOTOR_SPEED = 100;
+const OP_DURATION_MILLISECONDS = 450;
 
 
 export default function Bert() {

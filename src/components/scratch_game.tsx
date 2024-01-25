@@ -393,7 +393,7 @@ const ScratchGame: React.FC<ScratchGameProps> = ({ isDemoBot, websocket_address,
 
 
 
-                <div className="btn-menu w-11/12 max-w-[1000px] mt-8 mb-4 border-0 border-white flex flex-col p-2">
+                <div className="btn-menu w-11/12 max-w-[1000px] mt-8 mb-4 border-2 border-white flex flex-col p-2">
 
                     <div className="btn-row flex flex-row justify-between items-center">
                         <Button style={{ backgroundColor: '#efaac4' }} className="border-2 border-black text-black w-24 m-0" onClick={() => handleAddBlock("For")}>
