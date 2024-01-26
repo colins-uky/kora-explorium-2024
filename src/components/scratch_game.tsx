@@ -317,7 +317,7 @@ const ScratchGame: React.FC<ScratchGameProps> = ({ isDemoBot, websocket_address,
             setIsExecuting(false);
             websocket?.close();
         }, 
-    [isDemoBot, websocket_address]);
+    [isDemoBot, websocket_address, motor_speed, operation_duration_milliseconds]);
 
 
 
