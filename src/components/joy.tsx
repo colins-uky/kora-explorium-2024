@@ -154,6 +154,10 @@ const Joy: React.FC = () => {
             motor3 = leftSpeedStr;
             motor4 = rightSpeedStr;
 
+            let motor1_char_arr = motor3.split('');
+            motor1_char_arr[0] = motor1_char_arr[0] === '0' ? '1' : '0';
+            motor3 = motor1_char_arr.join('');
+
             let motor3_char_arr = motor3.split('');
             motor3_char_arr[0] = motor3_char_arr[0] === '0' ? '1' : '0';
             motor3 = motor3_char_arr.join('');
