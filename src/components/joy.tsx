@@ -7,7 +7,6 @@ import WebSocketClient from './websocket';
 import { Joystick } from 'react-joystick-component';
 
 
-const uk_image = "@/../public/UK_logo.svg";
 
 const HALT = "M0000000000000000\n";
 
@@ -77,7 +76,7 @@ const Joy: React.FC = () => {
     const [isConnectionError, setIsConnectionError] = useState(false);
     const [websocket, setWebsocket] = useState<WebSocketClient>(new WebSocketClient(setIsConnectionError));
 
-    
+    const isMobileTouch = isMobile();
     
     const calculateMotorSpeeds = useCallback((forwardBackward: number, leftRight: number, buttons: number[], deadSwitch: boolean) => {
         // Joystick deadzone
@@ -569,7 +568,7 @@ const Joy: React.FC = () => {
 
         <div className='absolute bottom-6 left-4 flex flex-col' >
             
-            <Button variant="danger" className='m-2 h-32 w-52' onClick={handleEmergencyStop}>
+            <Button variant="danger" className='m-2 h-20 w-52' onClick={handleEmergencyStop}>
                 E-STOP
             </Button>
 
@@ -620,7 +619,7 @@ const Joy: React.FC = () => {
                 }
             </Button>
             
-            { isMobile() ? 
+            { isMobileTouch ? 
                 <Button variant="secondary" className='m-2 w-52' onClick={handleShowJoyStick}>
                     { showJoystick ? 
                         "Hide Joystick"
@@ -629,7 +628,7 @@ const Joy: React.FC = () => {
                     }
                 </Button>
                 :
-                <></>
+                <div></div>
             }
             
             

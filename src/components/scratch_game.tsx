@@ -237,6 +237,7 @@ const ScratchGame: React.FC<ScratchGameProps> = ({ isDemoBot, websocket_address,
     
     const [isExecuting, setIsExecuting] = useState<boolean>(false);
 
+    const [stopFlag, setStopFlag] = useState<boolean>(false);
 
 
     // Takes in an array of opcodes and sends the corresponding motor messages to the bot.
@@ -283,7 +284,11 @@ const ScratchGame: React.FC<ScratchGameProps> = ({ isDemoBot, websocket_address,
 
             for (let i = 0; i < opcodes.length; i++) {
                 
-                
+                if (stopFlag) {
+                    setStopFlag(false);
+                    setIsExecuting(false);
+                    return;
+                }
                 
                 // Duration of the HALT messages.
                 await new Promise(resolve => setTimeout(resolve, 2000));
@@ -317,7 +322,7 @@ const ScratchGame: React.FC<ScratchGameProps> = ({ isDemoBot, websocket_address,
             setIsExecuting(false);
             websocket?.close();
         }, 
-    [isDemoBot, websocket_address, motor_speed, operation_duration_milliseconds]);
+    [isDemoBot, websocket_address, motor_speed, operation_duration_milliseconds, stopFlag]);
 
 
 
@@ -377,7 +382,7 @@ const ScratchGame: React.FC<ScratchGameProps> = ({ isDemoBot, websocket_address,
 
 
     const handleStopProgram = () => {
-
+        setStopFlag(true);
     }
 
   
@@ -387,13 +392,13 @@ const ScratchGame: React.FC<ScratchGameProps> = ({ isDemoBot, websocket_address,
         <DndProvider backend={isTouchDevice() ? TouchBackend : HTML5Backend}>
             <div className="w-full flex flex-col items-center">
 
-                <div className="overflow-scroll relative w-11/12 max-w-[1000px] h-1/2 mt-10 p-3 border-4 border-ukblue rounded-xl bg-white shadow-lg">
+                <div className="overflow-scroll relative w-11/12 max-w-[1000px] h-1/2 mt-10 p-1 border-4 border-ukblue rounded-xl bg-white shadow-lg">
                     <BlockContainer blocks={blocks} setBlocks={setBlocks} />
                 </div>
 
 
 
-                <div className="btn-menu w-11/12 max-w-[1000px] mt-8 mb-4 border-2 border-white flex flex-col p-2">
+                <div className="btn-menu w-11/12 max-w-[1000px] mt-8 mb-4 border-4 border-white flex flex-col p-2">
 
                     <div className="btn-row flex flex-row justify-between items-center">
                         <Button style={{ backgroundColor: '#efaac4' }} className="border-2 border-black text-black w-24 m-0" onClick={() => handleAddBlock("For")}>

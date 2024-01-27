@@ -119,7 +119,7 @@ const ScratchBlock: React.FC<Props> = ({ type, index, id, moveBlock, setBlocks})
 
     if (isLoop) {
         return (
-            <div ref={ref} className="w-full">
+            <div ref={ref} className="w-full select-none">
                 <div  className={`flex cursor-grab active:cursor-grabbing relative w-48 h-9 rounded-md border-2 border-black`} style={{ backgroundColor: color }}>
                 
                     <h1 className="text-lg font-bold z-10 absolute top-0.5 left-3 text-black">{type_copy}</h1>
@@ -144,7 +144,7 @@ const ScratchBlock: React.FC<Props> = ({ type, index, id, moveBlock, setBlocks})
     }
     else {
         return (
-            <div ref={ref} className="w-full">
+            <div ref={ref} className="w-full select-none">
                 <div className="flex cursor-grab active:cursor-grabbing relative w-40 h-9 rounded-md border-2 border-black" style={{ backgroundColor: color }}>
                     
                     
